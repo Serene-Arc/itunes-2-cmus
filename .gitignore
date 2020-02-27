@@ -480,5 +480,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-*cookies.txt
-/post-script.txt
+*.pl
