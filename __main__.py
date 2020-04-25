@@ -39,4 +39,4 @@ if __name__ == '__main__':
         for song in songLocs:
             file.write(song.as_posix() + '\n')
 
-    print('Conversion ')
+    print('Conversion Complete')
