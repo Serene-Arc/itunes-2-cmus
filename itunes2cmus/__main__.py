@@ -3,15 +3,26 @@
 
 import argparse
 import csv
-import os
 import logging
+import os
 import pathlib
+import sys
 
 parser = argparse.ArgumentParser(prog='itunes-2-cmus')
 logger = logging.getLogger()
 
 
-def initParser():
+def _init_logging() -> None:
+    logger.setLevel(1)
+    stream = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter(
+        '[%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
+    stream.setFormatter(formatter)
+    logger.addHandler(stream)
+    stream.setLevel(logging.INFO)
+
+
+def _init_parser():
     parser.add_argument('playlist', metavar='P', help='playlist to convert')
     parser.add_argument(
         'mount',
@@ -22,18 +33,26 @@ def initParser():
         help='the mount point in the windows directory structure')
 
 
-if __name__ == '__main__':
-    initParser()
-    args = parser.parse_args()
-    logger.info('Searching file...')
-    songLocs = []
-    with open(args.playlist, 'r', newline='', encoding='utf-16') as csvfile:
+def read_from_itunes_playlist(
+        playlist: pathlib.Path) -> list[pathlib.PurePath]:
+    song_locations = []
+    with open(playlist, 'r', newline='', encoding='utf-16') as csvfile:
         rd = csv.DictReader(csvfile, delimiter='\t')
         for song in rd:
-            songLocs.append(pathlib.PureWindowsPath(song['Location']))
+            song_locations.append(pathlib.PureWindowsPath(song['Location']))
+    return song_locations
+
+
+if __name__ == '__main__':
+    _init_logging()
+    _init_parser()
+    args = parser.parse_args()
+
+    args.playlist = pathlib.Path(args.playlist)
+    logger.info('Searching file...')
+    songLocs = read_from_itunes_playlist(args.playlist)
 
     logger.info('{} songs found'.format(len(songLocs)))
-    songLocs = [str(path).strip(path.anchor) for path in songLocs]
 
     if args.mountfolder:
         songLocs = [
